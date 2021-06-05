@@ -82,6 +82,7 @@ class GeoFireCollectionRef {
     @required GeoFirePoint center,
     @required double radius,
     @required String field,
+    bool ignoreMissingGeoPoint = false,
     bool strictMode = false,
   }) {
     final precision = Util.setPrecision(radius);
@@ -112,11 +113,17 @@ class GeoFireCollectionRef {
           }
         }
         final GeoPoint geoPoint = geoPointField['geopoint'];
-        distanceDocSnapshot.distance =
-            center.distance(lat: geoPoint.latitude, lng: geoPoint.longitude);
+
+        if (geoPoint == null && !ignoreMissingGeoPoint) {
+          distanceDocSnapshot.distance =
+              center.distance(lat: geoPoint.latitude, lng: geoPoint.longitude);
+        }
         return distanceDocSnapshot;
       });
 
+      if (ignoreMissingGeoPoint) {
+        mappedList.toList();
+      }
       final filteredList = strictMode
           ? mappedList
               .where((DistanceDocSnapshot doc) =>
