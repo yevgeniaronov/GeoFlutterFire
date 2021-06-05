@@ -122,23 +122,27 @@ class GeoFireCollectionRef {
       });
 
       if (ignoreMissingGeoPoint) {
-        mappedList.toList();
+        return mappedList
+            .toList()
+            .map((element) => element.documentSnapshot)
+            .toList();
+      } else {
+        final filteredList = strictMode
+            ? mappedList
+                .where((DistanceDocSnapshot doc) =>
+                        doc.distance <=
+                        radius * 1.02 // buffer for edge distances;
+                    )
+                .toList()
+            : mappedList.toList();
+        filteredList.sort((a, b) {
+          final distA = a.distance;
+          final distB = b.distance;
+          final val = (distA * 1000).toInt() - (distB * 1000).toInt();
+          return val;
+        });
+        return filteredList.map((element) => element.documentSnapshot).toList();
       }
-      final filteredList = strictMode
-          ? mappedList
-              .where((DistanceDocSnapshot doc) =>
-                      doc.distance <=
-                      radius * 1.02 // buffer for edge distances;
-                  )
-              .toList()
-          : mappedList.toList();
-      filteredList.sort((a, b) {
-        final distA = a.distance;
-        final distB = b.distance;
-        final val = (distA * 1000).toInt() - (distB * 1000).toInt();
-        return val;
-      });
-      return filteredList.map((element) => element.documentSnapshot).toList();
     });
     return filtered.asBroadcastStream();
   }
